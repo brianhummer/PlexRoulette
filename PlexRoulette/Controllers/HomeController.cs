@@ -8,24 +8,56 @@ using PlexRoulette.Models;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.Text;
-using PlexRoulette.Plex;
+using PlexRoulette.Services;
+using PlexRoulette.Models.RouletteViewModels;
 
 namespace PlexRoulette.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IPlexApi _plexApi;
+
+        private static string AuthToken;
+        private static List<Directory> Libraries;
+        private static Dictionary<string, Metadata[]> LibraryMetadata;
+
+        public HomeController(IPlexApi plexApi)
+        {
+            _plexApi = plexApi;
+        }
         public async Task<IActionResult> Index()
         {
-            var plexApi = new PlexApi();
-            var login = await plexApi.SignIn(new UserRequest { login = "brianhummer", password = "pwn89noobs" });
-            return View();
+            if(Libraries == null || Libraries.Count == 0)
+                await UpdatePlexData();
+
+            return View(Libraries);
         }
 
-        public IActionResult About()
+        [HttpPost]
+        public async Task<IActionResult> RandomThree([FromBody]SelectedLibrary selected)
         {
-            ViewData["Message"] = "Your application description page.";
+            if(LibraryMetadata == null || LibraryMetadata.Count == 0)
+                await UpdatePlexData();
 
-            return View();
+            var temp = LibraryMetadata[selected.LibraryId].Where(x => x.viewedLeafCount == 0).ToList();
+            List<Metadata> randomThree = new List<Metadata>();
+            var rand = new Random(DateTime.Now.Millisecond);
+
+            for(int i = 0; i < 3; i++)
+            {
+                var selection = rand.Next(0, temp.Count - 1);
+                randomThree.Add(temp[selection]);
+
+                temp.Remove(temp[selection]);
+            }
+
+            var viewModel = new RouletteSelectionViewModel
+            {
+                LibraryId = selected.LibraryId,
+                WatchOptions = randomThree
+            };
+
+            return PartialView("RandomThree", viewModel);
         }
 
         public IActionResult Contact()
@@ -38,6 +70,20 @@ namespace PlexRoulette.Controllers
         public IActionResult Error()
         {
             return View();
+        }
+
+        private async Task UpdatePlexData()
+        {
+            if(AuthToken == null)
+                AuthToken = (await _plexApi.SignIn()).user.authentication_token;
+
+            Libraries = (await _plexApi.GetLibrarySections(AuthToken)).MediaContainer.Directory;
+            LibraryMetadata = new Dictionary<string, Metadata[]>();
+
+            for (int i = 0; i < Libraries.Count; i++)
+            {
+                LibraryMetadata.Add(Libraries[i].key, (await _plexApi.GetLibrary(AuthToken, Libraries[i].key)).MediaContainer.Metadata);
+            }
         }
     }
 }

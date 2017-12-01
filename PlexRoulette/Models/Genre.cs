@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PlexRoulette.Plex
+namespace PlexRoulette.Models
 {
-    public enum ContentType
+    public class Genre
     {
-        Json,
-        Xml,
-        Text,
-        Html,
+        public string tag { get; set; }
     }
 }

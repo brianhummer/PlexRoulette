@@ -1,0 +1,22 @@
+﻿@model PlexRoulette.Models.RouletteViewModels.RouletteSelectionViewModel
+
+<h2>Up Next</h2>
+<div class="row mb-4">
+    @foreach (var media in Model.WatchOptions)
+    {
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">@media.title</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">@media.year</h6>
+                    <p class="card-text">@media.leafCount episodes</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<button id="librarySelect" data-libraryId="@Model.LibraryId" class="btn btn-primary">Reroll</button>
+<button id="reset" class="btn btn-info">Start Over</button>
+
+
+

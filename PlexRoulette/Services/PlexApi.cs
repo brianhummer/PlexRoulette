@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using PlexRoulette.Models;
 using System;
 using System.Collections.Generic;
@@ -8,20 +9,27 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace PlexRoulette.Plex
+namespace PlexRoulette.Services
 {
-    public class PlexApi
+    public class PlexApi : IPlexApi
     {
         private const string SignInUri = "https://plex.tv/users/sign_in.json";
         private const string FriendsUri = "https://plex.tv/pms/friends/all";
         private const string GetAccountUri = "https://plex.tv/users/account.json";
         private const string ServerUri = "https://plex.tv/pms/servers.xml";
 
-        public async Task<PlexAuthentication> SignIn(UserRequest user)
+        public PlexApi(IOptions<AuthPlexOptions> optionsAccessor)
+        {
+            Options = optionsAccessor.Value;
+        }
+
+        public AuthPlexOptions Options { get; } //set only via Secret Manager
+
+        public async Task<PlexAuthentication> SignIn()
         {
             var userModel = new PlexUserRequest
             {
-                user = user
+                user = new UserRequest { login = Options.ServerLogin, password = Options.ServerPassword }
             };
             var request = new Request(SignInUri, string.Empty, HttpMethod.Post);
 
@@ -31,6 +39,27 @@ namespace PlexRoulette.Plex
             var obj = await Request<PlexAuthentication>(request);
 
             return obj;
+        }
+
+        public async Task<PlexContainer> GetLibrarySections(string authToken)
+        {
+            var request = new Request("library/sections", Options.PlexFullHost, HttpMethod.Get);
+            AddHeaders(request, authToken);
+            return await Request<PlexContainer>(request);
+        }
+
+        public async Task<PlexContainer> GetLibrary(string authToken, string libraryId)
+        {
+            var request = new Request($"library/sections/{libraryId}/all", Options.PlexFullHost, HttpMethod.Get);
+            AddHeaders(request, authToken);
+            return await Request<PlexContainer>(request);
+        }
+
+        public async Task<PlexContainer> GetImage(string authToken, string imageUrl)
+        {
+            var request = new Request(imageUrl, Options.PlexFullHost, HttpMethod.Get);
+            AddHeaders(request, authToken);
+            return await Request<PlexContainer>(request);
         }
 
         private void AddHeaders(Request request, string authToken)

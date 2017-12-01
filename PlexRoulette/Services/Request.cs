@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlexRoulette.Plex
+namespace PlexRoulette.Services
 {
     public class Request
     {

@@ -1,10 +1,23 @@
-﻿@{
+﻿@model IEnumerable<Directory>
+@{
     ViewData["Title"] = "Plex Roulette";
 }
 
 <img class="img-fluid rounded" src="~/images/salt.jpg" />
-<div class="row">
-    <div id="rouletteContainer" class="col-md-12 mt-3">
-        <h2>Select a library to watch from next</h2>
+<div id="rouletteContainer">
+    <h2>Select a library to watch from next</h2>
+    <div class="row">
+        @foreach (var d in Model)
+        {
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">@d.title</h4>
+                        <p class="card-text">@d.seasons.Count</p>
+                        <a href="#" id="librarySelect" data-libraryId="@d.key" class="btn btn-primary">Select Library</a>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

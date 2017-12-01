@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PlexRoulette.Services;
 
 namespace PlexRoulette
 {
@@ -21,7 +22,11 @@ namespace PlexRoulette
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IPlexApi, PlexApi>();
+
             services.AddMvc();
+
+            services.Configure<AuthPlexOptions>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
